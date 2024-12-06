@@ -224,7 +224,7 @@ const Scene: React.FC = () => {
       const decodedAudio = await tempAudioContext.decodeAudioData(arrayBuffer);
 
       // Resample to 16kHz, mono PCM16
-      const resampledBuffer = await resampleAudio(decodedAudio, 16000, 1);
+      const resampledBuffer = await resampleAudio(decodedAudio, 24000, 1);
       const pcmData = convertToPCM16(resampledBuffer);
 
       const base64Audio = arrayBufferToBase64(pcmData);
@@ -281,7 +281,7 @@ const Scene: React.FC = () => {
         // Resample to match AudioContext sample rate
         if (audioContextRef.current) {
           const toSampleRate = audioContextRef.current.sampleRate;
-          const resampledData = resampleFloat32(float32Data, 16000, toSampleRate);
+          const resampledData = resampleFloat32(float32Data, 24000, toSampleRate);
           // Post to AudioWorklet
           if (workletNodeRef.current) {
             workletNodeRef.current.port.postMessage(resampledData);
