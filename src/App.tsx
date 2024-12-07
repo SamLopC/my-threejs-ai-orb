@@ -22,21 +22,21 @@ function App() {
         {!showChat ? (
           // Floating Text Bar
           <div
-            style={{
-              position: "fixed",
-              bottom: "10%",
-              left: "50%",
-              transform: "translateX(-50%)",
-              backgroundColor: "#222",
-              color: "#fff",
-              padding: "10px 20px",
-              borderRadius: "20px",
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
-              cursor: "pointer",
-              zIndex: 10,
-              maxWidth: "300px",
-              textAlign: "center",
-            }}
+            // style={{
+            //   position: "fixed",
+            //   bottom: "10%",
+            //   left: "50%",
+            //   transform: "translateX(-50%)",
+            //   backgroundColor: "#222",
+            //   color: "#fff",
+            //   padding: "10px 20px",
+            //   borderRadius: "20px",
+            //   boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
+            //   cursor: "pointer",
+            //   zIndex: 10,
+            //   maxWidth: "300px",
+            //   textAlign: "center",
+            // }}
             onClick={() => setShowChat(true)}
           >
             {history.length > 0

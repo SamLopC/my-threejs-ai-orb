@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, FormEvent } from "react";
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
@@ -6,12 +6,13 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass";
 import { Shaders } from "../shaders/Shaders";
 import { useScene } from "../context/SceneContext";
+import { FaPaperPlane, FaMicrophone, FaStop } from "react-icons/fa";
 
 const Scene: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const { bloomParams, colorParams, geometryConfig } = useScene();
 
-  // --- Added states and refs for audio recording and WebSocket logic ---
+  // --- Audio Recording and WebSocket Logic ---
   const [permission, setPermission] = useState(false);
   const [recordingStatus, setRecordingStatus] = useState<"inactive" | "recording">("inactive");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -22,6 +23,15 @@ const Scene: React.FC = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
 
+  // --- Text Messaging States ---
+  const [textInput, setTextInput] = useState("");
+  const [messages, setMessages] = useState<
+    { sender: "user" | "assistant"; content: string }[]
+  >([]);
+
+  // Buffer for accumulating assistant text before response.done
+  const [assistantTextBuffer, setAssistantTextBuffer] = useState("");
+
   // Define uniforms using useRef to allow updates from outside useEffect
   const uniformsRef = useRef({
     u_time: { value: 0.0 },
@@ -29,6 +39,13 @@ const Scene: React.FC = () => {
     u_red: { value: colorParams.red },
     u_green: { value: colorParams.green },
     u_blue: { value: colorParams.blue },
+  });
+
+  // --- Define Target Color for Smooth Transition ---
+  const targetColorRef = useRef({
+    red: colorParams.red,
+    green: colorParams.green,
+    blue: colorParams.blue,
   });
 
   useEffect(() => {
@@ -112,7 +129,6 @@ const Scene: React.FC = () => {
     initializeAudioContext();
 
     // Setup WebSocket
-    // Adjust URL to your backend WebSocket endpoint
     websocketRef.current = new WebSocket("ws://localhost:3000/ws");
     websocketRef.current.onopen = () => {
       console.log("Connected to WebSocket server.");
@@ -143,10 +159,21 @@ const Scene: React.FC = () => {
     const clock = new THREE.Clock();
 
     const animate = () => {
+      // Update camera position based on mouse
       camera.position.x += (mouseX - camera.position.x) * 0.05;
-      camera.position.y += (-mouseY - camera.position.y) * 0.5;
+      camera.position.y += (-mouseY - camera.position.y) * 0.05;
       camera.lookAt(scene.position);
       uniformsRef.current.u_time.value = clock.getElapsedTime();
+
+      // --- Smooth Color Transition ---
+      const lerpFactor = 0.03; // Adjust for transition speed (0 < lerpFactor < 1)
+
+      // Interpolate red component
+      uniformsRef.current.u_red.value += (targetColorRef.current.red - uniformsRef.current.u_red.value) * lerpFactor;
+      // Interpolate green component
+      uniformsRef.current.u_green.value += (targetColorRef.current.green - uniformsRef.current.u_green.value) * lerpFactor;
+      // Interpolate blue component
+      uniformsRef.current.u_blue.value += (targetColorRef.current.blue - uniformsRef.current.u_blue.value) * lerpFactor;
 
       bloomComposer.render();
       requestAnimationFrame(animate);
@@ -199,12 +226,18 @@ const Scene: React.FC = () => {
 
     setAudioChunks(localAudioChunks);
     setRecordingStatus("recording");
+
+    // --- Change THREE.js Scene Color to White (Set Target Color) ---
+    targetColorRef.current = { red: 1.0, green: 1.0, blue: 1.0 };
   };
 
   const stopRecording = () => {
     if (recordingStatus !== "recording") return;
     setRecordingStatus("inactive");
     mediaRecorder.current?.stop();
+
+    // --- Revert THREE.js Scene Color to Original (Set Target Color) ---
+    targetColorRef.current = { red: colorParams.red, green: colorParams.green, blue: colorParams.blue };
 
     mediaRecorder.current!.onstop = async () => {
       const blob = new Blob(audioChunks, { type: "audio/webm" });
@@ -223,7 +256,7 @@ const Scene: React.FC = () => {
       const tempAudioContext = new window.AudioContext();
       const decodedAudio = await tempAudioContext.decodeAudioData(arrayBuffer);
 
-      // Resample to 16kHz, mono PCM16
+      // Resample to 24kHz, mono PCM16
       const resampledBuffer = await resampleAudio(decodedAudio, 24000, 1);
       const pcmData = convertToPCM16(resampledBuffer);
 
@@ -263,19 +296,64 @@ const Scene: React.FC = () => {
     }
   };
 
-  // --- Handling incoming AI Audio ---
+  // --- Text Messaging Functions ---
+  const sendTextMessage = () => {
+    const trimmedMessage = textInput.trim();
+    if (trimmedMessage === "") return;
+
+    // Add user message to the messages state
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { sender: "user", content: trimmedMessage },
+    ]);
+
+    // Send the message to the WebSocket
+    if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+      const message = {
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: trimmedMessage,
+            },
+          ],
+        },
+      };
+
+      websocketRef.current.send(JSON.stringify(message));
+      console.log("Text message sent to WebSocket server.");
+
+      const responseCreateMessage = { type: "response.create" };
+      websocketRef.current.send(JSON.stringify(responseCreateMessage));
+      console.log("Sent response.create to request a response from the assistant.");
+    } else {
+      console.error("WebSocket is not connected.");
+    }
+
+    // Clear the input field
+    setTextInput("");
+  };
+
+  const handleTextSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    sendTextMessage();
+  };
+
+  // --- Handling incoming AI Audio and Text ---
   const handleServerMessage = async (message: string) => {
-    console.log("Received message from server:", message);
     try {
       const parsedMessage = JSON.parse(message);
       if (parsedMessage.type === "error") {
-        console.error("Error from server:", parsedMessage.error);
+        console.error("Error from server:", parsedMessage.message);
         return;
       }
 
       if (parsedMessage.type === "output_audio") {
         const audioBase64 = parsedMessage.audio;
-        // Decode base64 PCM16 @16kHz
+        // Decode base64 PCM16 @24kHz
         const pcmData = base64ToInt16(audioBase64);
         const float32Data = convertInt16ToFloat32(pcmData);
         // Resample to match AudioContext sample rate
@@ -289,14 +367,39 @@ const Scene: React.FC = () => {
         }
       }
 
-      // Handle AI response completion
+      if (parsedMessage.type === "output_text") {
+        const textChunk = parsedMessage.text ?? "";
+        setMessages((prevMessages) => {
+          // If the last message is from the assistant, append to it
+          const lastIndex = prevMessages.length - 1;
+          if (lastIndex >= 0 && prevMessages[lastIndex].sender === "assistant") {
+            const updatedMessage = {
+              ...prevMessages[lastIndex],
+              content: prevMessages[lastIndex].content + textChunk,
+            };
+            return [...prevMessages.slice(0, lastIndex), updatedMessage];
+          } else {
+            // Otherwise, create a new assistant message
+            return [...prevMessages, { sender: "assistant", content: textChunk }];
+          }
+        });
+      }
+
+      // Once we receive response.done, we finalize the assistant's message
       if (parsedMessage.type === "response.done") {
+        // Add the accumulated assistant text as a single message
+        if (assistantTextBuffer.trim() !== "") {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            { sender: "assistant", content: assistantTextBuffer.trim() },
+          ]);
+          setAssistantTextBuffer(""); // Clear the buffer
+        }
+
         // Reset or stop the animation after a 2 second delay
         setTimeout(() => {
           uniformsRef.current.u_frequency.value = 0.2;
         }, 2000);
-
-        // uniformsRef.current.u_frequency.value = 0.0;
 
         console.log("AI response completed. Animation stopped.");
       }
@@ -306,7 +409,11 @@ const Scene: React.FC = () => {
   };
 
   // --- Utility Functions for Resampling and Conversion ---
-  const resampleAudio = async (audioBuffer: AudioBuffer, targetSampleRate: number, numChannels: number) => {
+  const resampleAudio = async (
+    audioBuffer: AudioBuffer,
+    targetSampleRate: number,
+    numChannels: number
+  ) => {
     const offlineContext = new OfflineAudioContext(
       numChannels,
       Math.ceil((audioBuffer.length * targetSampleRate) / audioBuffer.sampleRate),
@@ -385,45 +492,125 @@ const Scene: React.FC = () => {
     return result;
   };
 
-  // --- Remove calculateFrequency function, since it's now handled in the worklet ---
-  // const calculateFrequency = (audioData: Float32Array) => { /* ... */ };
-
   return (
-    <div ref={mountRef}>
-      {/* Add a button to start/stop recording */}
-      {recordingStatus === "inactive" ? (
-        <button
-          onClick={startRecording}
+    <div
+      style={{
+        position: "relative",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
+      <div ref={mountRef} style={{ width: "100%", height: "100%" }}></div>
+
+      {/* --- Sidebar for Text Messaging --- */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          width: "300px",
+          height: "100%",
+          backgroundColor: "transparent",
+          color: "white",
+          display: "flex",
+          flexDirection: "column",
+          padding: "20px",
+          boxSizing: "border-box",
+          overflowY: "auto",
+        }}
+      >
+        <div
           style={{
-            position: "absolute",
-            top: "10px",
-            left: "10px",
-            zIndex: 999,
-            padding: "10px 20px",
-            fontSize: "16px",
-            cursor: "pointer",
+            flex: 1,
+            marginBottom: "20px",
+            overflowY: "auto",
           }}
         >
-          Start Recording
-        </button>
-      ) : (
-        <button
-          onClick={stopRecording}
-          style={{
-            position: "absolute",
-            top: "10px",
-            left: "10px",
-            zIndex: 999,
-            padding: "10px 20px",
-            fontSize: "16px",
-            backgroundColor: "red",
-            color: "white",
-            cursor: "pointer",
-          }}
-        >
-          Stop Recording
-        </button>
-      )}
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
+                marginBottom: "8px",
+              }}
+            >
+              <div
+                style={{
+                  // maxWidth: "70%",
+                  padding: "12px 16px",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  lineHeight: "1.5",
+                  color: msg.sender === "user" ? "#fff" : "#95f5ff",
+                  backgroundColor: msg.sender === "user" ? "" : "#0000009c",
+                  // boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                {msg.content}
+              </div>
+            </div>
+          ))}
+
+        </div>
+        <form onSubmit={handleTextSubmit} style={{ display: "flex", alignItems: "center", backgroundColor:"#0000009c", padding:"12px", borderRadius:"12px" }}>
+          <input
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="Type your message..."
+            style={{
+              flex: 1,
+              padding: "10px",
+              borderRadius: "5px",
+              border: "none",
+              marginRight: "10px",
+              backgroundColor: "transparent",
+              color: "white",
+            }}
+          />
+
+          <button
+            type="submit"
+            style={{
+              // padding: "10px",
+              borderRadius: "5px",
+              border: "none",
+              backgroundColor: "transparent",
+              color: "white",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            aria-label="Send Message"
+          >
+            <FaPaperPlane />
+          </button>
+          
+          <button
+            type="button"
+            onClick={recordingStatus === "inactive" ? startRecording : stopRecording}
+            style={{
+              padding: "10px",
+              borderRadius: "50%",
+              border: "none",
+              backgroundColor: recordingStatus === "inactive" ? "transparent" : "red",
+              color: "white",
+              cursor: "pointer",
+              marginLeft: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            aria-label={recordingStatus === "inactive" ? "Start Recording" : "Stop Recording"}
+          >
+            {recordingStatus === "inactive" ? <FaMicrophone /> : <FaStop />}
+          </button>
+        </form>
+
+      </div>
     </div>
   );
 };
