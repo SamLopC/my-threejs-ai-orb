@@ -7,10 +7,15 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass";
 import { Shaders } from "../shaders/Shaders";
 import { useScene } from "../context/SceneContext";
 import { FaPaperPlane, FaMicrophone, FaStop } from "react-icons/fa";
+import "../styles/global.css";
 
 const Scene: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const { bloomParams, colorParams, geometryConfig } = useScene();
+  const [isChatActive, setIsChatActive] = useState(false);
+
+
+
 
   // --- Audio Recording and WebSocket Logic ---
   const [permission, setPermission] = useState(false);
@@ -28,6 +33,16 @@ const Scene: React.FC = () => {
   const [messages, setMessages] = useState<
     { sender: "user" | "assistant"; content: string }[]
   >([]);
+
+  const handleInputFocus = () => {
+    setIsChatActive(true);
+  };
+
+
+  const closeChat = () => {
+    setIsChatActive(false);
+  };
+  
 
   // Buffer for accumulating assistant text before response.done
   const [assistantTextBuffer, setAssistantTextBuffer] = useState("");
@@ -48,13 +63,20 @@ const Scene: React.FC = () => {
     blue: colorParams.blue,
   });
 
-  useEffect(() => {
-    // Set up THREE.js scene, camera, renderer...
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
+  const canvas = document.getElementsByTagName("canvas")[0]
 
+  useEffect(() => {
+
+    
+    const renderer = new THREE.WebGLRenderer({ 	canvas: canvas,
+      antialias: true,
+      alpha: true});
+
+    
+    renderer.setSize(window.innerWidth, window.innerHeight);
     const scene = new THREE.Scene();
+
+
     const camera = new THREE.PerspectiveCamera(
       45,
       window.innerWidth / window.innerHeight,
@@ -493,125 +515,59 @@ const Scene: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100vw",
-        height: "100vh",
-        overflow: "hidden",
-      }}
-    >
-      <div ref={mountRef} style={{ width: "100%", height: "100%" }}></div>
-
-      {/* --- Sidebar for Text Messaging --- */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          width: "300px",
-          height: "100%",
-          backgroundColor: "transparent",
-          color: "white",
-          display: "flex",
-          flexDirection: "column",
-          padding: "20px",
-          boxSizing: "border-box",
-          overflowY: "auto",
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            marginBottom: "20px",
-            overflowY: "auto",
-          }}
-        >
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
-                marginBottom: "8px",
-              }}
-            >
-              <div
-                style={{
-                  // maxWidth: "70%",
-                  padding: "12px 16px",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  lineHeight: "1.5",
-                  color: msg.sender === "user" ? "#fff" : "#95f5ff",
-                  backgroundColor: msg.sender === "user" ? "" : "#0000009c",
-                  // boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                }}
-              >
-                {msg.content}
-              </div>
-            </div>
-          ))}
-
-        </div>
-        <form onSubmit={handleTextSubmit} style={{ display: "flex", alignItems: "center", backgroundColor:"#0000009c", padding:"12px", borderRadius:"12px" }}>
-          <input
-            type="text"
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            placeholder="Type your message..."
-            style={{
-              flex: 1,
-              padding: "10px",
-              borderRadius: "5px",
-              border: "none",
-              marginRight: "10px",
-              backgroundColor: "transparent",
-              color: "white",
-            }}
-          />
-
-          <button
-            type="submit"
-            style={{
-              // padding: "10px",
-              borderRadius: "5px",
-              border: "none",
-              backgroundColor: "transparent",
-              color: "white",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            aria-label="Send Message"
-          >
-            <FaPaperPlane />
-          </button>
-          
-          <button
-            type="button"
-            onClick={recordingStatus === "inactive" ? startRecording : stopRecording}
-            style={{
-              padding: "10px",
-              borderRadius: "50%",
-              border: "none",
-              backgroundColor: recordingStatus === "inactive" ? "transparent" : "red",
-              color: "white",
-              cursor: "pointer",
-              marginLeft: "10px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            aria-label={recordingStatus === "inactive" ? "Start Recording" : "Stop Recording"}
-          >
-            {recordingStatus === "inactive" ? <FaMicrophone /> : <FaStop />}
-          </button>
-        </form>
-
-      </div>
+    <div className={`scene-container ${isChatActive ? "chat-active" : ""}`}>
+    <div ref={mountRef} className="scene-mount">
     </div>
+
+    {/* --- Sidebar for Text Messaging --- */}
+    <div className="sidebar">
+      {/* Close Chat Button */}
+      {isChatActive && (
+        <button
+          type="button"
+          onClick={closeChat}
+          className="close-chat-button"
+          aria-label="Close Chat"
+        >
+          &times;
+        </button>
+      )}
+
+      <div className="messages-container">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`message ${msg.sender === "user" ? "user-message" : "bot-message"}`}
+          >
+            <div className="message-content">{msg.content}</div>
+          </div>
+        ))}
+      </div>
+      <form onSubmit={handleTextSubmit} className="message-form">
+        <input
+          type="text"
+          value={textInput}
+          onChange={(e) => setTextInput(e.target.value)}
+          placeholder="Type your message..."
+          className="message-input"
+          onFocus={handleInputFocus}
+        />
+
+        <button type="submit" className="send-button" aria-label="Send Message">
+          <FaPaperPlane />
+        </button>
+
+        <button
+          type="button"
+          onClick={recordingStatus === "inactive" ? startRecording : stopRecording}
+          className={`record-button ${recordingStatus === "inactive" ? "" : "recording"}`}
+          aria-label={recordingStatus === "inactive" ? "Start Recording" : "Stop Recording"}
+        >
+          {recordingStatus === "inactive" ? <FaMicrophone /> : <FaStop />}
+        </button>
+      </form>
+    </div>
+  </div>
   );
 };
 
