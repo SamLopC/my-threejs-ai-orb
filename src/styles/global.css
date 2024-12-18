@@ -257,6 +257,8 @@
 /* Action buttons */
 .step-form-actions {
   margin-top: 32px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .back-button {
