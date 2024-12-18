@@ -3,24 +3,22 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#1976d2",
+      main: "#3f51b5", // Deep Blue
     },
     secondary: {
-      main: "#ff4081",
+      main: "#00e676", // Bright Green
     },
     background: {
-      default: "#f4f6f8",
+      default: "#e3f2fd",
       paper: "#ffffff",
     },
-  },
-  typography: {
-    fontFamily: "Roboto, Arial, sans-serif",
-    h4: {
-      fontWeight: 700,
+    text: {
+      primary: "#333333",
+      secondary: "#555555",
     },
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 20,
   },
 });
 

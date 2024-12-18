@@ -19,8 +19,9 @@
     /* Background */
   
     body {
-      background: url('../assets/images/Footer Rocks Dark.png') no-repeat bottom / contain, url('../assets/images/star-background.svg'), linear-gradient(#111E45, #0E3D8B);
-      background-attachment: fixed;
+      background: #000000;
+      /* background: url('../assets/images/Footer Rocks Dark.png') no-repeat bottom / contain, url('../assets/images/star-background.svg'), linear-gradient(#111E45, #0E3D8B);
+      background-attachment: fixed; */
       color: #e91e63;
     }
     
@@ -172,21 +173,132 @@
       margin-bottom: 10px;
     }
 
-    .step-form-container {
-        width: 100%;
-        margin: auto;
-        padding-top: 16px;
-    }
+
+
     
-    .step-form-content {
-        margin-top: 200px;
-    }
-    
-    .step-form-actions {
-        display: flex;
-        justify-content: right;
-        margin-top: 16px;
-    }
+/* FORM STYLING */
+
+/* Main container styling */
+.step-form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #4b4b4b, #03191a, #4facfe);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.step-form-box {
+  width: 100%;
+  max-width: 800px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 48px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Header styling */
+.header-text {
+  font-weight: 800;
+  color: #3f51b5;
+  text-shadow: 0px 4px 8px rgba(63, 81, 181, 0.3);
+  font-size: 2.4rem;
+  padding-top: 25px;
+}
+
+.subtitle-text {
+  font-size: 1rem;
+  color: #555555;
+  margin-top: 8px;
+}
+
+
+
+
+/* Stepper styling */
+.MuiStepLabel-labelContainer {
+  margin-top: -8px; 
+}
+
+.MuiStepLabel-iconContainer {
+  padding: 0 !important; 
+  margin-bottom: -6px;
+}
+
+.MuiStepIcon-root {
+  width: 32px;
+  height: 32px;
+}
+
+.MuiStepIcon-text {
+  font-size: 0.75rem; 
+  font-weight: bold;
+}
+
+/* Step content styling */
+.step-form-content {
+  margin-top: 32px;
+}
+
+/* Text fields */
+.text-field {
+  margin-bottom: 24px;
+  background-color: #f5f5f5;
+  border-radius: 20px;
+  padding: 8px;
+}
+
+.text-field.large {
+  min-height: 120px;
+}
+
+/* Action buttons */
+.step-form-actions {
+  margin-top: 32px;
+}
+
+.back-button {
+  color: #3f51b5;
+  border-color: #3f51b5;
+  transition: all 0.3s ease;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border-radius: 20px;
+}
+
+.back-button:hover {
+  background-color: #e3f2fd;
+}
+
+.next-button {
+  background-color: #3f51b5;
+  color: white;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+
+}
+
+.next-button:hover {
+  background-color: #283593;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
     
 
 
