@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useEffect, useRef, useState, FormEvent } from "react";
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";

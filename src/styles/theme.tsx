@@ -1,20 +1,20 @@
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#3f51b5", // Deep Blue
+      main: "#ff007f",
     },
     secondary: {
-      main: "#00e676", // Bright Green
+      main: "#00e676", 
     },
     background: {
       default: "#e3f2fd",
-      paper: "#ffffff",
+      paper: "rgba(255, 255, 255, 0.10)",
     },
     text: {
-      primary: "#333333",
-      secondary: "#555555",
+      primary: "#FFFFFF",
+      secondary: "#FFFFFF",
     },
   },
   shape: {
