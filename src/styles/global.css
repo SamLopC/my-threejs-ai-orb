@@ -1,0 +1,449 @@
+@layer base {
+    * {
+      box-sizing: border-box;
+    }
+  
+    html,
+    body,
+    #root {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: "Chakra Petch", sans-serif;
+      font-weight: 300;
+      font-style: normal;
+      overflow-x: hidden;
+    }
+  
+    /* Background */
+  
+    body {
+      background: #000000;
+      /* background: url('../assets/images/Footer Rocks Dark.png') no-repeat bottom / contain, url('../assets/images/star-background.svg'), linear-gradient(#111E45, #0E3D8B);
+      background-attachment: fixed; */
+      color: #e91e63;
+    }
+    
+
+    /* Scene container */
+    .scene-container {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      transition: transform 0.3s ease;
+    }
+  
+    /* Scene mount should flexibly adjust */
+    .scene-mount {
+      flex: 1;
+      height: 100%;
+      transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease, top 0.3s ease, right 0.3s ease, transform 0.3s ease, border-radius 0.3s ease;
+    }
+
+    .scene-container.chat-active .scene-mount {
+      transform: translateX(-20%);
+      transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease, top 0.3s ease, right 0.3s ease, transform 0.3s ease, border-radius 0.3s ease;
+    }
+  
+    /* Sidebar */
+    .sidebar {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 20%;
+      color: white;
+      padding: 20px;
+      display: flex;
+      overflow-y: hidden;
+      flex-direction: column;
+      transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease, top 0.3s ease, right 0.3s ease, transform 0.3s ease, border-radius 0.3s ease;
+      border-radius: 0; /* No border radius initially */
+    }
+  
+    /* Modify sidebar when active to appear as a square */
+    .scene-container.chat-active .sidebar {
+      width: 40%;
+      height: 65%; 
+      top: 50%;
+      overflow-y: hidden;
+      right: 50px; /* Adjust as needed */
+      transform: translateY(-50%);
+      border-radius: 20px;
+      border-color: #f7f7f7;
+      border-style: solid;
+      border-width: 1px;
+      background-color: rgba(5, 5, 5, 0.9); /* More opaque when active */
+    }
+  
+    /* Messages container */
+    .messages-container {
+      flex: 1;
+      margin-bottom: 20px;
+      overflow-y: auto;
+    }
+  
+    /* Individual message */
+    .message {
+      display: flex;
+      margin-bottom: 8px;
+    }
+  
+    .user-message {
+      justify-content: flex-end;
+    }
+  
+    .bot-message {
+      justify-content: flex-start;
+    }
+  
+    .message-content {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  
+    .user-message .message-content {
+      color: #fff;
+      background-color: #535353;
+    }
+  
+    .bot-message .message-content {
+      color: #5aeeff;
+      background-color: #0000009c;
+    }
+  
+    /* Form styles */
+    .message-form {
+      display: flex;
+      align-items: center;
+      background-color: #0000009c;
+      padding: 12px;
+      border-radius: 12px;
+      transition: background-color 0.3s ease;
+    }
+  
+    .scene-container.chat-active .message-form {
+      background-color: #555555; /* Darker background when active */
+    }
+  
+    .message-input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      margin-right: 10px;
+      background-color: transparent;
+      color: rgb(255, 255, 255);
+      outline: none; /* Remove default outline */
+    }
+  
+    .send-button,
+    .record-button {
+      border: none;
+      background-color: transparent;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  
+    .record-button {
+      padding: 10px;
+      border-radius: 50%;
+      margin-left: 10px;
+    }
+  
+    .record-button.recording {
+      background-color: red;
+    }
+  
+    /* Close Chat Button */
+    .close-chat-button {
+      align-self: flex-end;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    .fade-in-out {
+      animation: fadeIn 0.5s ease-in-out, fadeOut 0.5s ease-in-out 1.5s;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+    
+    .loading-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh; /* Full screen height */
+      background: linear-gradient(135deg, #243e73, #0b1011, #243e73); /* Darker background */
+    }
+    
+
+
+
+
+    
+/* FORM STYLING */
+
+/* Main container styling */
+.step-form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #243e73, #0b1011, #243e73); /* Darker background */
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.step-form-box {
+  width: 100%;
+  max-width: 800px;
+  border-color: #5aeeff;
+  border-style: solid;
+  border-width: thin; /* Equivalent to the browser's minimal supported border */
+  border-radius: 24px;
+  padding: 48px;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Header styling */
+.header-text {
+  font-weight: 800;
+  color: #5aeeff;
+  text-shadow: 0px 4px 8px rgba(63, 81, 181, 0.3);
+  font-size: 2.4rem;
+  padding-top: 25px;
+}
+
+.subtitle-text {
+  font-size: 1rem;
+  color: #555555;
+  margin-top: 8px;
+  padding-bottom: 25px;
+}
+/* Stepper styling */
+.MuiStepLabel-labelContainer {
+  margin-top: -8px; 
+}
+
+.MuiStepLabel-iconContainer {
+  padding: 0 !important; 
+  margin-bottom: -6px;
+}
+
+.MuiStepIcon-root {
+  width: 32px;
+  height: 32px;
+}
+
+.MuiStepIcon-text {
+  font-size: 0.75rem; 
+  font-weight: bold;
+}
+
+/* Step content styling */
+.step-form-content {
+  margin-top: 32px;
+}
+
+/* Text fields */
+.text-field {
+  margin-bottom: 24px;
+  background-color: rgba(255, 255, 255, 0.10);
+  border-radius: 20px;
+  padding: 8px;
+}
+
+.text-field.large {
+  min-height: 120px;
+}
+
+/* Action buttons */
+.step-form-actions {
+  margin-top: 32px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.back-button {
+  color: #3f51b5;
+  border-color: #3f51b5;
+  transition: all 0.3s ease;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border-radius: 20px;
+}
+
+.back-button:hover {
+  background-color: #e3f2fd;
+}
+
+.next-button {
+  background-color: #3f51b5;
+  color: white;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+
+}
+
+.next-button:hover {
+  background-color: #283593;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+/* MOBILE AND DIFFERENT SCREENS     */
+
+    @media (max-width: 1320px) {
+  
+        .sidebar {
+          width: 30%;
+          height: 100%;
+        }
+  
+        .scene-container.chat-active .sidebar {
+            width: 40%;
+            height: 65%; 
+            top: 50%;
+            overflow-y: hidden;
+            right: 50px; /* Adjust as needed */
+            transform: translateY(-50%);
+            border-radius: 20px;
+            border-color: #f7f7f7;
+            border-style: solid;
+            border-width: 1px;
+            background-color: rgba(5, 5, 5, 0.9); /* More opaque when active */
+          }
+  
+        .scene-container.chat-active .scene-mount {
+            transform: translateX(-25%);
+            transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease, top 0.3s ease, right 0.3s ease, transform 0.3s ease, border-radius 0.3s ease;
+          }
+      }
+
+    @media (max-width: 1200px) {
+        .scene-container {
+          justify-content: center; /* Centers everything horizontally */
+          align-items: center; /* Centers everything vertically */
+        }
+  
+        .sidebar {
+          width: 100%;
+          height: 100%;
+        }
+  
+        .scene-container.chat-active .sidebar {
+          width: 100%;
+          height: 100%;
+          top: 0;
+          right: 0;
+          transform: none;
+          border-radius: 0;
+          border-width: 0px;
+        }
+  
+        .scene-container.chat-active .scene-mount {
+          transform: none; /* Prevent movement */
+        }
+      }
+
+  
+      @media (max-width: 900px) {
+        .scene-container {
+          justify-content: center; /* Centers everything horizontally */
+          align-items: center; /* Centers everything vertically */
+        }
+  
+        .sidebar {
+          width: 100%;
+          height: 100%;
+        }
+  
+        .scene-container.chat-active .sidebar {
+          width: 100%;
+          height: 100%;
+          top: 0;
+          right: 0;
+          transform: none;
+          border-radius: 0;
+          border-width: 0px;
+        }
+  
+        .scene-container.chat-active .scene-mount {
+          transform: none; /* Prevent movement */
+        }
+      }
+  
+      /* Smaller screens (e.g., iPhone) */
+      @media (max-width: 430px) {
+        .sidebar {
+          width: 100%;
+          height: 100%;
+          border-color: #000000;
+        }
+  
+        .scene-container.chat-active .sidebar {
+          width: 100%;
+          height: 100%;
+          border-radius: 0;
+          border-width: 0px;
+        }
+    }
+}
