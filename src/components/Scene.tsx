@@ -153,7 +153,7 @@ const Scene: React.FC = () => {
     initializeAudioContext();
 
     // Setup WebSocket
-    websocketRef.current = new WebSocket("ws://localhost:3000/ws");
+    websocketRef.current = new WebSocket("ws://localhost:3000/ws/");
     websocketRef.current.onopen = () => {
       console.log("Connected to WebSocket server.");
     };
