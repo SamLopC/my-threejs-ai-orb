@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
   Typography,
-  Stepper,
-  Step,
-  StepLabel,
   Paper,
   Link,
   Radio,
   RadioGroup,
   FormControlLabel,
+  LinearProgress,
 } from "@mui/material";
 
 const onboardingSteps = [
@@ -23,428 +21,376 @@ const onboardingSteps = [
   },
   {
     id: 2,
-    question: "Which business idea do you want to get advised on?", // NEW STEP
+    question: "Which business idea do you want to get advised on?",
   },
-  // Removed Step ID 3: "Do you already have a business idea?"
   {
-    id: 4,
+    id: 3,
     question:
       "Have you decided on a business structure (e.g., sole proprietorship, LLC, corporation)?",
   },
   {
-    id: 5,
+    id: 4,
     question:
       "Do you plan to fund the business with personal savings or small loans?",
   },
   {
-    id: 6,
+    id: 5,
     question: "Are you seeking venture capital or angel investment?",
   },
   {
-    id: 7,
+    id: 6,
     question: "Have you started selling products or services?",
   },
   {
-    id: 8,
+    id: 7,
     question: "Are you currently developing a product, prototype, or service?",
   },
   {
-    id: 9,
+    id: 8,
     question:
       "Does your business rely on unique technology, design, or intellectual property?",
   },
   {
-    id: 10,
+    id: 9,
     question: "Have you taken steps to protect your intellectual property?",
   },
   {
-    id: 11,
+    id: 10,
     question: "Are you working with co-founders or hiring employees?",
   },
   {
-    id: 12,
+    id: 11,
     question:
       "Are you planning to operate locally or expand beyond your region?",
   },
   {
-    id: 13,
+    id: 12,
     question:
       "Do you anticipate needing help with contracts, compliance, or legal disputes?",
   },
   {
-    id: 14,
+    id: 13,
     question:
       "Would you like guidance on scaling your business or preparing for funding rounds?",
   },
 ];
 
-// Define types for the StepForm props
 interface StepFormProps {
-  onComplete: () => void; // Callback when the entire form is completed
+  onComplete: (
+    answers: Record<number, string>,
+    notes: Record<number, string>
+  ) => void;
 }
 
 const StepForm: React.FC<StepFormProps> = ({ onComplete }) => {
-  // Track which step the user is currently on (0-based index)
   const [activeStep, setActiveStep] = useState<number>(0);
-
-  // Store the user's answer for each step in a simple object: { [stepId]: string }
-  const [answers, setAnswers] = useState<{ [key: number]: string }>({});
-
-  // Store notes as a mapping from stepId to note
-  const [notes, setNotes] = useState<{ [key: number]: string }>({});
-
-  // Current answer selected by user in the radio group or selection
-  const [currentAnswer, setCurrentAnswer] = useState<string>("");
-
-  // If user selects "No" on Q1, show a link to Startosphere instead of advancing
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [notes, setNotes] = useState<Record<number, string>>({});
+  const [manualMode, setManualMode] = useState<Record<number, boolean>>({});
   const [showStartoLink, setShowStartoLink] = useState(false);
 
-  /**
-   * Helper: Set or update a note for a specific step
-   */
   const setNote = (stepId: number, newNote: string) => {
-    setNotes((prevNotes) => ({
-      ...prevNotes,
+    setNotes((prev) => ({
+      ...prev,
       [stepId]: newNote,
     }));
   };
 
-  /**
-   * Helper: Remove a note for a specific step
-   */
   const removeNote = (stepId: number) => {
-    setNotes((prevNotes) => {
-      const updatedNotes = { ...prevNotes };
-      delete updatedNotes[stepId];
-      return updatedNotes;
+    setNotes((prev) => {
+      const updated = { ...prev };
+      delete updated[stepId];
+      return updated;
     });
   };
 
-  /**
-   * Handle advancing to the next step,
-   * with special skipping logic for Q4-> skip Q5,
-   * and Q6-> skip Q7,
-   * plus new logic for Q1-> skip Q2 if user says "No".
-   */
-  const handleNext = () => {
-    const currentStepObject = onboardingSteps[activeStep];
-    const currentStepId = currentStepObject.id;
-    const answer = currentAnswer.trim();
-
+  const advanceStepLogic = (currentStepId: number, answer: string) => {
     const answerLower = answer.toLowerCase();
 
-    // Save the current answer in the overall answers object
     setAnswers((prev) => ({ ...prev, [currentStepId]: answer }));
 
-    // ---- Special logic for question #1 (BMC Startosphere) ----
     if (currentStepId === 1) {
       if (answerLower === "no") {
-        // Show link to Startosphere, then skip Q2 and go to Q3 (which is removed)
         setShowStartoLink(true);
         setNote(1, "User needs to complete Lean BMC on Startosphere.");
-        return;
-      } else if (answerLower === "yes") {
-        // Remove any previous note if user changes answer to "Yes"
+        return; // Stop here, user must click "Proceed"
+      } else {
         removeNote(1);
       }
     }
 
-    // ---- General notes logic ----
+    // 3) Notes logic
     switch (currentStepId) {
       case 2:
-        // "Which business idea do you want to get advised on?"
         setNote(2, `Selected business idea: ${answer}`);
         break;
-      // Removed case 3 as the question is deleted
-      case 4:
-        // "Have you decided on a business structure?"
+      case 3:
         if (answerLower === "no") {
           setNote(
-            4,
-            "Provide an overview of different business structures and their legal implications."
+            3,
+            "Business structures and their legal implications."
           );
-        } else if (answerLower === "yes") {
+        } else {
+          removeNote(3);
+        }
+        break;
+      case 4:
+        if (answerLower === "yes") {
+          setNote(
+            4,
+            "Small business funded with personal savings/loans."
+          );
+        } else {
           removeNote(4);
         }
         break;
       case 5:
-        // "Do you plan to fund the business with personal savings or small loans?"
         if (answerLower === "yes") {
+          setNote(5, "Venture-backed startup.");
+        } else {
           setNote(
             5,
-            "Mark this as a small business funded with personal savings/loans."
+            "Grants, partnerships, or bootstrapping."
           );
-        } else if (answerLower === "no") {
-          removeNote(5);
         }
         break;
       case 6:
-        // "Are you seeking venture capital or angel investment?"
         if (answerLower === "yes") {
-          setNote(6, "Make note that this is a venture-backed startup.");
-        } else if (answerLower === "no") {
-          setNote(
-            6,
-            "Consider other funding options like grants, partnerships, or bootstrapping."
-          );
+          setNote(6, "Already in business and generating revenue or sales.");
+        } else {
+          removeNote(6);
         }
         break;
       case 7:
-        // "Have you started selling products or services?"
-        if (answerLower === "yes") {
-          setNote(7, "Already in business and generating revenue or sales.");
-        } else if (answerLower === "no") {
+        if (answerLower === "no") {
+          setNote(7, "Ideation and validation.");
+        } else {
           removeNote(7);
         }
         break;
       case 8:
-        // "Are you currently developing a product, prototype, or service?"
-        if (answerLower === "no") {
-          setNote(8, "Focus on ideation and validation.");
-        } else if (answerLower === "yes") {
-          removeNote(8);
+        if (answerLower === "yes") {
+          setNote(8, "Trademarks, patents, or copyrights.");
+        } else {
+          setNote(8, "Suggest general business registration steps.");
         }
         break;
       case 9:
-        // "Does your business rely on unique technology...?"
-        if (answerLower === "yes") {
-          setNote(9, "Advise on trademarks, patents, or copyrights.");
-        } else if (answerLower === "no") {
-          setNote(9, "Suggest general business registration steps.");
+        if (answerLower === "no") {
+          setNote(9, "Recommend immediate actions to secure IP.");
+        } else {
+          removeNote(9);
         }
         break;
       case 10:
-        // "Have you taken steps to protect your intellectual property?"
-        if (answerLower === "no") {
-          setNote(10, "Recommend immediate actions to secure IP.");
-        } else if (answerLower === "yes") {
+        if (answer === "Co-founder") {
+          setNote(10, "Co-founder agreements.");
+        } else if (answer === "Hiring") {
+          setNote(10, "Employment contracts.");
+        } else {
           removeNote(10);
         }
         break;
       case 11:
-        // "Are you working with co-founders or hiring employees?"
-        if (answer === "Co-founder") {
-          setNote(11, "Advise on co-founder agreements.");
-        } else if (answer === "Hiring") {
-          setNote(11, "Advise on employment contracts.");
+        if (answer === "Locally") {
+          setNote(11, "Localized legal compliance and permits.");
+        } else if (answer === "Expand") {
+          setNote(
+            11,
+            "Legal assistance for interstate or international operations."
+          );
         } else {
           removeNote(11);
         }
         break;
       case 12:
-        // "Are you planning to operate locally or expand beyond your region?"
-        if (answer === "Locally") {
-          setNote(12, "Suggest localized legal compliance and permits.");
-        } else if (answer === "Expand") {
-          setNote(12, "Recommend legal assistance for interstate or international operations.");
+        if (answerLower === "yes") {
+          setNote(12, "Direct to appropriate legal resources or assistance tools.");
         } else {
-          removeNote(12);
+          setNote(12, "Conclude with general legal best practices.");
         }
         break;
       case 13:
-        // "Do you anticipate needing help with contracts, compliance, or legal disputes?"
         if (answerLower === "yes") {
-          setNote(13, "Direct to appropriate legal resources or assistance tools.");
-        } else if (answerLower === "no") {
-          setNote(13, "Conclude with general legal best practices.");
-        }
-        break;
-      case 14:
-        // "Would you like guidance on scaling your business or preparing for funding rounds?"
-        if (answerLower === "yes") {
-          setNote(14, "Provide venture startup-focused legal advice.");
-        } else if (answerLower === "no") {
-          setNote(14, "Offer resources for maintaining small business operations.");
+          setNote(13, "Venture startup-focused legal advice.");
+        } else {
+          setNote(13, "Maintaining small business operations.");
         }
         break;
       default:
         break;
     }
 
-    // ---- Handle Skip Logic ----
-
-    // Q1 -> If "No", skip Q2 and go to Q3 (which is removed)
-    if (currentStepId === 1 && answerLower === "no") {
-      // Already handled above by showing Startosphere link
+    // 4) Skip logic
+    if (currentStepId === 4 && answerLower === "yes") {
+      // Skip Q5
+      setAnswers((prev) => ({ ...prev, 5: "No" }));
+      // setNote(5, "Skipped seeking venture capital or angel investment.");
+      setActiveStep((prev) => Math.min(prev + 2, onboardingSteps.length - 1));
       return;
     }
 
-    // Q5 -> If "Yes", skip Q6 and go to Q7
-    if (currentStepId === 5 && answerLower === "yes") {
-      // Record question #6 (ID=6) as "No"
-      setAnswers((prev) => ({ ...prev, 6: "No" }));
-      setNote(6, "Skipped seeking venture capital or angel investment.");
-      setCurrentAnswer("");
-      setActiveStep((prev) => prev + 2); // jump to Q7 (index +2)
+    if (currentStepId === 6 && answerLower === "yes") {
+      // Skip Q7
+      setAnswers((prev) => ({ ...prev, 7: "Skipped" }));
+      // setNote(7, "Skipped: Currently developing a product, prototype, or service.");
+      setActiveStep((prev) => Math.min(prev + 2, onboardingSteps.length - 1));
       return;
     }
 
-    // Q7 -> If "Yes", skip Q8 and go to Q9
-    if (currentStepId === 7 && answerLower === "yes") {
-      // Record question #8 (ID=8) as "Skipped"
-      setAnswers((prev) => ({ ...prev, 8: "Skipped" }));
-      setNote(8, "Skipped: Currently developing a product, prototype, or service.");
-      setCurrentAnswer("");
-      setActiveStep((prev) => prev + 2); // jump to Q9 (index +2)
-      return;
-    }
+    // 5) Move to next step (normal)
+    setActiveStep((prev) => Math.min(prev + 1, onboardingSteps.length - 1));
+  };
 
-    // If no special skip logic, proceed normally
-    setCurrentAnswer("");
-    if (activeStep < onboardingSteps.length - 1) {
-      setActiveStep((prev) => prev + 1);
-    } else {
-      // If we're at the last step, call onComplete
-      onComplete();
+  const onAnswerChange = (stepId: number, selectedValue: string) => {
+    // Save the selection in case user changes it multiple times
+    setAnswers((prev) => ({
+      ...prev,
+      [stepId]: selectedValue,
+    }));
+
+    // Auto-advance if not in manual mode
+    if (!manualMode[stepId]) {
+      advanceStepLogic(stepId, selectedValue);
     }
   };
 
   /**
-   * If user answered "No" to Q1, they see the Startosphere link. 
-   * Once they click "Proceed," we skip Q2 and go to Q3 (which is removed).
+   * handleContinue is shown when the user is in manual mode on a step.
+   * Clicking it applies our standard "advanceStepLogic" with the current answer.
    */
-  const handleProceedAfterBMC = () => {
-    // Hide the link
-    setShowStartoLink(false);
-
-    // Mark Q2 as "Skipped" since user did not complete BMC
-    setAnswers((prev) => ({ ...prev, 2: "Skipped" }));
-    setNote(2, "Skipped: User did not complete Lean BMC on Startosphere.");
-
-    // Move from Q1 (index 0) directly to Q3 (index 2, which is removed, so to Q4)
-    setActiveStep((prev) => prev + 2);
+  const handleContinue = (currentStepId: number) => {
+    const currentAnswer = answers[currentStepId];
+    advanceStepLogic(currentStepId, currentAnswer || "");
+    // Turn off manual mode for that step (for future visits)
+    setManualMode((prev) => ({ ...prev, [currentStepId]: false }));
   };
+
+  /**
+   * Called when user clicks the "Proceed" button on the Startosphere link scenario
+   */
+  // const handleProceedAfterBMC = () => {
+  //   setShowStartoLink(false);
+  //   setAnswers((prev) => ({ ...prev, 2: "Skipped" }));
+  //   setNote(2, "Skipped: User did not complete Lean BMC on Startosphere.");
+  //   setActiveStep((prev) => Math.min(prev + 2, onboardingSteps.length - 1));
+  // };
 
   const handleBack = () => {
-    if (activeStep > 0) {
-      setActiveStep((prev) => prev - 1);
+    if (activeStep === 0) return;
 
-      // If we are going back from Q2, remove its note
-      const previousStepId = onboardingSteps[activeStep - 1].id;
-      if (previousStepId === 1 && answers[1]?.toLowerCase() === "no") {
-        setShowStartoLink(false);
-        removeNote(2); // Remove skipped Q2 note
-      }
-
-      // If we are going back from a skipped step, adjust the active step
-      if (
-        (activeStep === 5 && answers[5]?.toLowerCase() === "yes") ||
-        (activeStep === 7 && answers[7]?.toLowerCase() === "yes")
-      ) {
-        setActiveStep((prev) => prev - 1);
-      }
+    if (showStartoLink) {
+      setShowStartoLink(false);
+      return;
     }
+
+    let nextStep = activeStep - 1;
+
+    const prevStepId = onboardingSteps[nextStep].id;
+
+    if (prevStepId === 5 && answers[5]?.toLowerCase() === "yes") {
+      nextStep = nextStep - 1;
+    }
+
+    if (prevStepId === 7 && answers[7]?.toLowerCase() === "yes") {
+      nextStep = nextStep - 1;
+    }
+
+    nextStep = Math.max(nextStep, 0);
+
+    const stepIdGoingTo = onboardingSteps[nextStep].id;
+    setManualMode((prev) => ({ ...prev, [stepIdGoingTo]: true }));
+
+    setActiveStep(nextStep);
   };
 
-  /**
-   * Determine if the current question has customized options
-   * Returns an array of options or null if default "Yes"/"No"
-   */
-  const getOptionsForCurrentQuestion = (): string[] | null => {
-    const currentStepObject = onboardingSteps[activeStep];
-    const q = currentStepObject.question;
-
-    // Step #2: "Which business idea do you want to get advised on?"
-    if (q === "Which business idea do you want to get advised on?") {
-      // Replace these options with actual business ideas as needed
+  const getOptionsForCurrentQuestion = (question: string): string[] | null => {
+    if (question === "Which business idea do you want to get advised on?") {
       return ["Idea A", "Idea B", "Idea C"];
     }
-
-    if (q === "Are you planning to operate locally or expand beyond your region?") {
+    if (
+      question ===
+      "Are you planning to operate locally or expand beyond your region?"
+    ) {
       return ["Locally", "Expand"];
     }
-
     if (
-      currentStepObject.question ===
+      question ===
       "Would you like guidance on scaling your business or preparing for funding rounds?"
     ) {
       return ["Scaling", "Funding"];
     }
-
-    if (q === "Are you working with co-founders or hiring employees?") {
+    if (
+      question === "Are you working with co-founders or hiring employees?"
+    ) {
       return ["Co-founder", "Hiring"];
     }
-
-    // Return null to indicate default "Yes"/"No"
+    // Default yes/no
     return null;
   };
 
-  // Fetch the options for the current question
-  const currentOptions = getOptionsForCurrentQuestion();
+  if (activeStep >= onboardingSteps.length) {
+    return (
+      <Box className="step-form-container">
+        <Paper elevation={4} className="step-form-box" sx={{ p: 3 }}>
+          <Typography variant="h4" align="center" gutterBottom>
+            Onboarding Complete!
+          </Typography>
+          <Typography variant="body1" align="center" gutterBottom>
+            Thank you for providing the information.
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  }
 
-  /**
-   * Populate currentAnswer when navigating back to a previous step
-   */
-  useEffect(() => {
-    const currentStepId = onboardingSteps[activeStep].id;
-    const savedAnswer = answers[currentStepId];
-    if (savedAnswer && savedAnswer !== "Skipped") {
-      setCurrentAnswer(savedAnswer);
-    } else {
-      setCurrentAnswer("");
-    }
-  }, [activeStep, answers]);
+  const currentStepObject = onboardingSteps[activeStep];
+  const currentStepId = currentStepObject.id;
+  const currentQuestion = currentStepObject.question;
+  const currentOptions = getOptionsForCurrentQuestion(currentQuestion);
+  const currentAnswer = answers[currentStepId] || "";
+
+  const isLastStep = activeStep === onboardingSteps.length - 1;
+
+  const progress = ((activeStep + 1) / onboardingSteps.length) * 100;
 
   return (
     <Box className="step-form-container">
-      <Paper elevation={4} className="step-form-box">
-        <Typography variant="h3" align="center" className="header-text">
+      <Paper elevation={4} className="step-form-box" sx={{ p: 3 }}>
+        <Typography variant="h3" align="center" gutterBottom>
           Welcome to Lobo
         </Typography>
         <Typography variant="subtitle1" align="center" gutterBottom>
           We'll ask some questions to understand your business specifics.
         </Typography>
 
-        <Stepper activeStep={activeStep} alternativeLabel>
-          {onboardingSteps.map((step, index) => (
-            <Step key={step.id}>
-              <StepLabel>{`Step ${index + 1}`}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+        {/* Linear progress bar */}
+        <Box sx={{ width: "100%", mt: 2 }}>
+          <LinearProgress variant="determinate" value={progress} />
+        </Box>
 
-        <Box className="step-form-content">
-          <Typography variant="h6" gutterBottom>
-            {onboardingSteps[activeStep].question}
-          </Typography>
+        <Box className="step-form-content" mt={3}>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mb: 2 }}
+            flexDirection="column"
+          >
+            <Typography variant="h6" gutterBottom sx={{ flex: 1, mr: 2 }}>
+              {currentQuestion}
+            </Typography>
 
-          {/* If user answered "No" on question #1 (BMC), show the Startosphere link */}
-          {showStartoLink ? (
-            <Box textAlign="center" mt={3}>
-              <Typography variant="body1" gutterBottom>
-                Please complete your Lean BMC on Startosphere before proceeding:
-              </Typography>
-              <Link
-                href="https://www.startosphere.io/"
-                target="_blank"
-                rel="noopener noreferrer"
-                underline="hover"
-                style={{
-                  fontSize: "1.1rem",
-                  display: "inline-block",
-                  marginBottom: "1rem",
-                }}
-              >
-                Go to Startosphere
-              </Link>
-              <Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleProceedAfterBMC}
-                >
-                  Proceed
-                </Button>
-              </Box>
-            </Box>
-          ) : (
-            <>
-              {/* Conditional RadioGroup: Use customized options if found, else default "Yes"/"No" */}
+            {/* If user said "No" to Q1 => show Startosphere link below,
+                so hide the RadioGroup */}
+            {!showStartoLink && (
               <RadioGroup
                 row
                 name={`question-${activeStep}`}
                 value={currentAnswer}
-                onChange={(e) => setCurrentAnswer(e.target.value)}
+                onChange={(e) =>
+                  onAnswerChange(currentStepId, e.target.value)
+                }
               >
                 {currentOptions ? (
                   currentOptions.map((option) => (
@@ -470,32 +416,87 @@ const StepForm: React.FC<StepFormProps> = ({ onComplete }) => {
                   </>
                 )}
               </RadioGroup>
+            )}
+          </Box>
 
-              <Box className="step-form-actions" mt={2}>
-                {activeStep > 0 && (
-                  <Button
-                    variant="outlined"
-                    onClick={handleBack}
-                    className="back-button"
-                  >
-                    Back
-                  </Button>
-                )}
-                <Button
+          {/* Show Startosphere link if user said "No" on Q1 */}
+          {showStartoLink && (
+            <Box textAlign="center" mt={3}>
+              <Typography variant="body1" gutterBottom>
+                Please complete your Lean BMC on Startosphere before proceeding:
+              </Typography>
+              <Link
+                href="https://www.startosphere.io/idea-board"
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+                style={{
+                  fontSize: "1.1rem",
+                  display: "inline-block",
+                  marginBottom: "1rem",
+                }}
+              >
+                Go to Startosphere
+              </Link>
+              <Box>
+                {/* <Button
                   variant="contained"
-                  onClick={handleNext}
-                  className="next-button"
                   color="primary"
-                  disabled={!currentAnswer} // disable if no choice
+                  onClick={handleProceedAfterBMC}
                 >
-                  {activeStep === onboardingSteps.length - 1 ? "Finish" : "Next"}
-                </Button>
+                  Proceed
+                </Button> */}
               </Box>
-            </>
+            </Box>
           )}
 
-          {/* Display notes so far (for user transparency) */}
-          {Object.keys(notes).length > 0 && (
+          {/* ACTION BUTTONS: always show Back on the left */}
+          {!showStartoLink && (
+            <Box
+              className="step-form-actions"
+              mt={2}
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Button
+                variant="outlined"
+                onClick={handleBack}
+                disabled={activeStep === 0}
+              >
+                Back
+              </Button>
+
+              {/* If we are in manual mode for this step, show "Continue" button.
+                  Otherwise, if it's the last step, show "Submit". Otherwise, show nothing. */}
+              <Box>
+                {manualMode[currentStepId] && !isLastStep && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={!currentAnswer}
+                    onClick={() => handleContinue(currentStepId)}
+                  >
+                    Continue
+                  </Button>
+                )}
+
+                {isLastStep && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={!currentAnswer}
+                    onClick={() => onComplete(answers, notes)}
+                  >
+                    Submit
+                  </Button>
+                )}
+              </Box>
+            </Box>
+          )}
+
+          {/* Show collected notes so far */}
+          {/* {Object.keys(notes).length > 0 && (
             <Box mt={3}>
               <Typography variant="subtitle1" gutterBottom>
                 Notes collected so far:
@@ -508,7 +509,7 @@ const StepForm: React.FC<StepFormProps> = ({ onComplete }) => {
                 ))}
               </ul>
             </Box>
-          )}
+          )} */}
         </Box>
       </Paper>
     </Box>

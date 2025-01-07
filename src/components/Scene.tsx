@@ -11,12 +11,20 @@ import { useScene } from "../context/SceneContext";
 import { FaPaperPlane, FaMicrophone, FaStop } from "react-icons/fa";
 import "../styles/global.css";
 
-const Scene: React.FC = () => {
+interface SceneProps {
+  answers: Record<number, string>;
+  notes: Record<number, string>;
+}
+
+const Scene: React.FC<SceneProps> = ({ answers, notes }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const { bloomParams, colorParams, geometryConfig } = useScene();
   const [isChatActive, setIsChatActive] = useState(false);
 
-
+  useEffect(() => {
+    console.log("Answers from StepForm:", answers);
+    console.log("Notes from StepForm:", notes);
+  }, [answers, notes]);
 
 
   // --- Audio Recording and WebSocket Logic ---
@@ -153,9 +161,16 @@ const Scene: React.FC = () => {
     initializeAudioContext();
 
     // Setup WebSocket
-    websocketRef.current = new WebSocket("ws://localhost:3000/ws/");
+    websocketRef.current = new WebSocket("ws://localhost:8000/ws/");
     websocketRef.current.onopen = () => {
-      console.log("Connected to WebSocket server.");
+      
+      const formDataMessage = {
+        type: "form_data",
+        notes: Object.entries(notes).map(([stepId, note]) => `${note}`).join("\n"),
+        answers: answers,
+      };
+  
+      websocketRef.current?.send(JSON.stringify(formDataMessage));
     };
 
     websocketRef.current.onmessage = (event) => {
