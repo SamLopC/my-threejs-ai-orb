@@ -1,29 +1,31 @@
 'use client';
 
 import React, { useState } from "react";
-import { SceneProvider } from "./context/SceneContext";
-import Scene from "./components/Scene";
-import "./styles/global.css";
-import StepForm from "./components/StepForm";
-import theme from "./styles/theme";
 import { ThemeProvider } from "@mui/material/styles";
 import Lottie from "react-lottie";
-import unicornAnimation from "./assets/lottie/unicorn.json";
 
-const steps = [
-  { questions: ["What is your name?", "What is your age?", "What is your email?", "What is your phone number?", "What is your address?"] },
-];
+import { SceneProvider } from "./context/SceneContext";
+import Scene from "./components/Scene";
+import StepForm from "./components/StepForm";
+
+import theme from "./styles/theme";
+import "./styles/global.css";
+import unicornAnimation from "./assets/lottie/unicorn.json";
 
 function App() {
   const [currentView, setCurrentView] = useState<"form" | "loading" | "scene">("form");
 
-  const handleComplete = () => {
-    setCurrentView("loading");
+  const [finalAnswers, setFinalAnswers] = useState<Record<number, string>>({});
+  const [finalNotes, setFinalNotes] = useState<Record<number, string>>({});
 
-  
+  const handleComplete = (answers: Record<number, string>, notes: Record<number, string>) => {
+    setFinalAnswers(answers);
+    setFinalNotes(notes);
+
+    setCurrentView("loading");
     setTimeout(() => {
       setCurrentView("scene");
-    }, 2000); 
+    }, 2000);
   };
 
   const defaultOptions = {
@@ -40,7 +42,7 @@ function App() {
       <SceneProvider>
         {currentView === "scene" && (
           <div className="fade-in">
-            <Scene />
+            <Scene answers={finalAnswers} notes={finalNotes} />
           </div>
         )}
         {currentView === "loading" && (
@@ -50,7 +52,7 @@ function App() {
         )}
         {currentView === "form" && (
           <div className="fade-out">
-            <StepForm steps={steps} onComplete={handleComplete} />
+            <StepForm onComplete={handleComplete} />
           </div>
         )}
       </SceneProvider>
