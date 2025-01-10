@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import Lottie from "react-lottie";
+import Player from "react-lottie-player";
+
+
 
 import { SceneProvider } from "./context/SceneContext";
 import Scene from "./components/Scene";
@@ -47,7 +50,12 @@ function App() {
         )}
         {currentView === "loading" && (
           <div className="loading-screen fade-in-out">
-            <Lottie options={defaultOptions} height={200} width={200} />
+            <Player
+              loop
+              play
+              animationData={unicornAnimation}
+              style={{ height: 200, width: 200 }}
+            />
           </div>
         )}
         {currentView === "form" && (

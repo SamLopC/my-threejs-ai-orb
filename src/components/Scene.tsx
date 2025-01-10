@@ -26,10 +26,25 @@ const Scene: React.FC<SceneProps> = ({ answers, notes }) => {
     console.log("Notes from StepForm:", notes);
   }, [answers, notes]);
 
+  
+
 
   // --- Audio Recording and WebSocket Logic ---
   const [permission, setPermission] = useState(false);
   const [recordingStatus, setRecordingStatus] = useState<"inactive" | "recording">("inactive");
+
+  useEffect(() => {
+    const rootElement = document.getElementById("root");
+  
+    if (recordingStatus === "recording") {
+      rootElement?.classList.add("recording-active");
+    } else {
+      rootElement?.classList.remove("recording-active");
+    }
+  }, [recordingStatus]);
+
+
+  
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
@@ -86,9 +101,14 @@ const Scene: React.FC<SceneProps> = ({ answers, notes }) => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     const scene = new THREE.Scene();
 
+    const isMobile = window.innerWidth < 768; // Example threshold for mobile devices
+
+    const fov = isMobile ? 70 : 45;
+
+
 
     const camera = new THREE.PerspectiveCamera(
-      45,
+      fov,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
