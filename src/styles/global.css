@@ -89,7 +89,6 @@
       /* border-color: #f7f7f7; */
       /* border-style: solid; */
       /* border-width: 1px; */
-      background-color: rgba(5, 5, 5, 0.078);
     }
   
     /* Messages container */
@@ -371,6 +370,56 @@
 
 
 /* MOBILE AND DIFFERENT SCREENS     */
+@media (max-width: 1400px) {
+  /* Sidebar base styling */
+  .sidebar {
+    width: 100%;
+    top: 50%; /* Move to lower half by default */
+    max-height: 50%;
+    position: absolute; /* Ensure it can be positioned */
+    border-color: #000000;
+    transition: top 0.3s ease; /* Smooth transition when chat is active */
+  }
+
+  /* Adjust sidebar when chat is active */
+  .scene-container.chat-active .sidebar {
+    top: 50%; /* Stay in the lower half */
+    background-color: transparent;
+    width: 100%;
+  }
+
+  /* Message container base styling */
+  .messages-container {
+    width: 100%;
+    top: 80%; /* Default to lower half */
+    opacity: 0;
+    transition: top 0.3s ease; /* Smooth transition when chat is active */
+  }
+
+  /* Message container when chat is active */
+  .scene-container.chat-active .messages-container {
+    top: -10%; /* Stay in lower half */
+    min-height: 100px;
+    opacity: 1;
+  }
+
+  .scene-container.chat-active .message-form {
+    top: -10%; /* Stay in lower half */
+    width: 100%;
+    opacity: 1;
+  }
+
+  /* Scene mount behavior */
+  .scene-container.chat-active .scene-mount {
+    transform: translateY(-25%); /* Move scene upwards */
+    max-height: 100vh;
+    transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease, 
+                top 0.3s ease, right 0.3s ease, transform 0.3s ease, border-radius 0.3s ease;
+  }
+#root {
+  background-color: #02060b; /* Color for smaller screens */
+}
+}
 
 
 
