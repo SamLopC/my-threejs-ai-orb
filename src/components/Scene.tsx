@@ -26,10 +26,25 @@ const Scene: React.FC<SceneProps> = ({ answers, notes }) => {
     console.log("Notes from StepForm:", notes);
   }, [answers, notes]);
 
+  
+
 
   // --- Audio Recording and WebSocket Logic ---
   const [permission, setPermission] = useState(false);
   const [recordingStatus, setRecordingStatus] = useState<"inactive" | "recording">("inactive");
+
+  useEffect(() => {
+    const rootElement = document.getElementById("root");
+  
+    if (recordingStatus === "recording") {
+      rootElement?.classList.add("recording-active");
+    } else {
+      rootElement?.classList.remove("recording-active");
+    }
+  }, [recordingStatus]);
+
+
+  
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
@@ -77,6 +92,10 @@ const Scene: React.FC<SceneProps> = ({ answers, notes }) => {
 
   useEffect(() => {
 
+    const isMobile = window.innerWidth < 768; // Example threshold for mobile devices
+
+    const fov = isMobile ? 70 : 45;
+
     
     const renderer = new THREE.WebGLRenderer({ 	canvas: canvas,
       antialias: true,
@@ -87,8 +106,11 @@ const Scene: React.FC<SceneProps> = ({ answers, notes }) => {
     const scene = new THREE.Scene();
 
 
+
+
+
     const camera = new THREE.PerspectiveCamera(
-      45,
+      fov,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
@@ -531,6 +553,16 @@ const Scene: React.FC<SceneProps> = ({ answers, notes }) => {
     return result;
   };
 
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll to the latest message
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]); // Run whenever messages change
+
   return (
     <div className={`scene-container ${isChatActive ? "chat-active" : ""}`}>
     <div ref={mountRef} className="scene-mount">
@@ -551,6 +583,8 @@ const Scene: React.FC<SceneProps> = ({ answers, notes }) => {
       )}
 
       <div className="messages-container">
+      <div className="overflow-scroll-gradient">
+        <div className="overflow-scroll-gradient__scroller">
         {messages.map((msg, index) => (
           <div
             key={index}
@@ -559,7 +593,12 @@ const Scene: React.FC<SceneProps> = ({ answers, notes }) => {
             <div className="message-content">{msg.content}</div>
           </div>
         ))}
+      <div ref={messagesEndRef} />
       </div>
+      </div>
+      </div>
+
+      {/* --- Text Input Form --- */}
       <form onSubmit={handleTextSubmit} className="message-form">
         <input
           type="text"
