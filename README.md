@@ -1,46 +1,83 @@
-# Getting Started with Create React App
+# Front-End 3D Scene with Three.js
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This repository contains a **React** front-end that renders an interactive 3D scene using **Three.js**. It also includes a simple chat interface that uses **WebSockets** to send and receive text and audio.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+1. **3D Scene Rendering**  
+   - Built directly with Three.js (`three` and `three/examples/jsm`) to create geometry, materials, and post-processing effects (bloom).
+   - Custom vertex and fragment shaders for added visual dynamics (`shaders.ts`).
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+2. **Chat & Audio Recording**  
+   - Real-time chat using WebSockets.
+   - Record and send audio to the server (WebSocket) for processing.
+   - Play back AI-generated audio via an AudioWorklet.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+3. **Form & Scene Context**  
+   - A multi-step form (`StepForm`) collects user inputs and notes.  
+   - When the form completes, data is passed to the 3D scene for further interaction.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Getting Started
 
-### `npm run build`
+### Prerequisites
+- **Node.js** (v14+ recommended)
+- **npm** or **yarn**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Installation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. **Clone this repository**  
+   ```bash
+   git clone
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. **Navigate to the project folder**  
+   ```bash
+   cd YourRepo
+   ```
 
-### `npm run eject`
+3. **Install dependencies**  
+   ```bash
+   npm install
+   ```
+   or
+   ```bash
+   yarn
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Running Locally
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. **Start the development server**  
+   ```bash
+   npm run dev
+   ```
+   or
+   ```bash
+   yarn dev
+   ```
+2. **Open your browser**  
+   Visit [http://localhost:3000](http://localhost:3000) to see the 3D scene and chat interface.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+---
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Project Structure
 
-## Learn More
+- **`components/Scene.tsx`**  
+  Main 3D scene code, manages Three.js objects, rendering loop, and WebSocket events.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- **`shaders/Shaders.ts`**  
+  Custom vertex and fragment shaders used in the 3D rendering.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- **`components/StepForm.tsx`**  
+  Multi-step form collecting user input before loading the 3D scene.
+
+- **`context/SceneContext.tsx`**  
+  Provides Bloom and color parameters to the scene.
+
+- **`styles/`**  
+  Global CSS and theme settings.
+
+---
